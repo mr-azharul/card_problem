@@ -86,7 +86,15 @@
                 {
                   if($row['yellow'] == $one)
                     {
-                      red_card();
+                      $mkye = "UPDATE get_card SET yellow='0' WHERE user='$name'";
+                      if(mysqli_query($conn,$mkup))
+                      {
+                        red_card();
+                      }
+                      else
+                      {
+                        echo "Error: ".mysqli_error($mkye);
+                      }
                     }
                     else
                     {
