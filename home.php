@@ -1,238 +1,280 @@
-<?php
+  <?php
 
-// Calling Cards Function
+        //Function for command line
+  function cmd()
+  {
+    $username = ($_POST['user']);
 
-function call()
-{
-      //Get user Input
-  $username = ($_POST['user']);
-  $one = 1;
+    //Database connection
+    $host = "localhost";
+    $dbuser = "root";
+    $pass = "";
+    $db = "card";
 
-      //Include time file
-  include 'time.php';
+    $conn = mysqli_connect($host,$dbuser,$pass,$db);
 
-      //String to Array
-  $textarr = explode("-",$username);
-  $name = $textarr[0];
-  $gr = $textarr[1];
-  $gor = $textarr[2];
-  $cause = $textarr[3];
-
-      //Database connection
-  $host = "localhost";
-  $dbuser = "root";
-  $pass = "";
-  $db = "card";
-
-  $conn = mysqli_connect($host,$dbuser,$pass,$db);
-
-      //Give card to user
-  $usget = "SELECT user FROM get_card WHERE user = '$name'";
-  $result = mysqli_query($conn,$usget);
-
-  if(mysqli_num_rows($result) > 0)
+    if($username == "show users")
     {
-      $add = "UPDATE get_card SET cause='$cause' WHERE user='$name'";
-      if(mysqli_query($conn,$add))
+      $sql = "SELECT user, yellow, red FROM get_card";
+      $result = mysqli_query($conn,$sql);
+
+      if(mysqli_num_rows($result) > 0)
       {
-        if($gr == "Get" || $gr == "get")
-          {
-            if($gor == "Yellow" || $gor == "yellow")                        //Give Yellow Card
+        while($row = mysqli_fetch_assoc($result))
+        {
+        echo "Name: ".$row["user"]. " - Yellow Cards: " . $row["yellow"]. " - Red Cards: " . $row["red"]. "<br>";
+        }
+      }
+      else
+      {
+        echo "Nothing on Database!";
+      }
+    }
+    else
+    {
+      call();
+    }
+  }
+
+        //Calling Function
+
+  function call()
+  {
+        //Get user Input
+    $username = ($_POST['user']);
+    $one = 1;
+
+        //Include time file
+    date_default_timezone_set("Asia/Dhaka");
+    $c = strtotime("now");
+    $starttime = date("Y:m:d h:i:sa",$c);
+    $d = strtotime("+10 minutes");
+    $endtime = date("Y:m:d h:i:sa",$d);
+
+
+        //String to Array
+    $textarr = explode(" ",$username,3);
+    $name = $textarr[0];
+    $gr = $textarr[1];
+    $cause = $textarr[2];
+
+        //Database connection
+    $host = "localhost";
+    $dbuser = "root";
+    $pass = "";
+    $db = "card";
+
+    $conn = mysqli_connect($host,$dbuser,$pass,$db);
+
+        //Give card to user
+    $usget = "SELECT user FROM get_card WHERE user = '$name'";
+    $result = mysqli_query($conn,$usget);
+
+    if(mysqli_num_rows($result) > 0)
+      {
+        $add = "UPDATE get_card SET cause='$cause' WHERE user='$name'";
+        if(mysqli_query($conn,$add))
+        {
+          if($gr == "Get" || $gr == "get")
             {
-              $chyellow = "SELECT yellow FROM get_card WHERE user='$name'";
-              $reyellow = mysqli_query($conn,$chyellow);
+                $chyellow = "SELECT yellow FROM get_card WHERE user='$name'";
+                $reyellow = mysqli_query($conn,$chyellow);
 
-              $row = mysqli_fetch_assoc($reyellow);
+                $row = mysqli_fetch_assoc($reyellow);
 
-              if($time <= $endtime)
-              {
-                if($row['yellow'] == $one)
-                  {
-                    red_card();
-                  }
-                  else
-                  {
-                    yellow_card();
-                  }
+                if($starttime <= $endtime)
+                {
+                  if($row['yellow'] == $one)
+                    {
+                      red_card();
+                    }
+                    else
+                    {
+                      yellow_card();
+                    }
                 }
                 else
                 {
                   yellow_card();
                 }
               }
-              else
-              {
-                red_card();                                                  //Give Red Card
-              }
-            }
-            else if ($gr == "Remove" || $gr == "remove")
-            {
-              if($gor == "Red" || $gor == "red")                            //Remove Red Card
+              else if ($gr == "Remove" || $gr == "remove")
               {
                 $rn = "SELECT red FROM get_card WHERE user='$name'";
                 $rnre = mysqli_query($conn,$rn);
                 $rrow = mysqli_fetch_assoc($rnre);
 
-                $num = $rrow['red']-1;
-
-                $usrmv = "UPDATE get_card SET red='$num' WHERE user='$name'";
-
-                if(mysqli_query($conn,$usrmv))
+                if($rrow['red'] == 0)
                 {
-                  echo "Removed one red card from this account";
+                  echo "Sorry this account have no any red card! so you can't remove it.";
                 }
                 else
                 {
-                  echo "Error: ".mysqli_error($gr);
+                  $num = $rrow['red']-1;
+
+                  $usrmv = "UPDATE get_card SET red='$num' WHERE user='$name'";
+
+                  if(mysqli_query($conn,$usrmv))
+                  {
+                    echo "Removed one red card from this account";
+                  }
+                  else
+                  {
+                    echo "Error: ".mysqli_error($gr);
+                  }
                 }
               }
-              else
-              {
-                $yn = "SELECT yellow FROM get_card WHERE user='$name'";     //Remove Yellow Card
-                $ynre = mysqli_query($conn,$rn);
-                $yrow = mysqli_fetch_assoc($ynre);
-
-                $num = $yrow['yellow']-1;
-
-                $usrmv = "UPDATE get_card SET yellow='$num' WHERE user='$name'";
-
-                if(mysqli_query($conn,$usrmv))
-                {
-                  echo "Removed one yellow card from this account";
-                }
-                else
-                {
-                  echo "Error: ".mysqli_error($gr);
-                }
-              }
-            }
-        else
-        {
-          echo "Please check your Speling!";
+          else
+          {
+            echo "Please check your Speling!";
+          }
         }
       }
-    }
+      else
+      {
+        echo "Sorry! This account is not on our database";
+      }
+  }
+
+  // Yellow Card Function
+
+  function yellow_card()
+  {
+        //Get user Input
+    $username = ($_POST['user']);
+
+        //Include time file
+    date_default_timezone_set("Asia/Dhaka");
+    $c = strtotime("now");
+    $starttime = date("Y:m:d h:i:sa",$c);
+    $d = strtotime("+10 minutes");
+    $endtime = date("Y:m:d h:i:sa",$d);
+
+
+        //String to Array
+    $textarr = explode(" ",$username,3);
+    $name = $textarr[0];
+    $gr = $textarr[1];
+    $cause = $textarr[2];
+
+        //Database connection
+    $host = "localhost";
+    $dbuser = "root";
+    $pass = "";
+    $db = "card";
+
+    $conn = mysqli_connect($host,$dbuser,$pass,$db);
+
+    $yn = "SELECT yellow FROM get_card WHERE user='$name'";
+    $ynre = mysqli_query($conn,$yn);
+    $yrow = mysqli_fetch_assoc($ynre);
+
+    $num = $yrow['yellow']+1;
+
+    $update = "UPDATE get_card SET yellow = '$num' WHERE user='$name'";
+    if(mysqli_query($conn,$update))
+      {
+        $tup = "UPDATE get_card SET endtime='$endtime' WHERE user='$name'";
+        if(mysqli_query($conn,$tup))
+        {
+          if($num >= 2)
+          {
+            red_card();
+          }
+          else
+          {
+            echo $name." get a yellow card, if he again get another yellow within 10 minutes, he will get a red card.";
+          }
+        }
+        else
+        {
+          echo "Error!";
+        }
+      }
     else
-    {
-      echo "Sorry! This account is not on our database";
-    }
-}
+      {
+        echo "Error!";
+      }
 
-// Yellow Card Function
+    mysqli_close($conn);
+  }
 
-function yellow_card()
-{
+  // Red Card Function
+
+  function red_card()
+  {
       //Get user Input
-  $username = ($_POST['user']);
+    $username = ($_POST['user']);
 
       //Include time file
-  include 'time.php';
+    date_default_timezone_set("Asia/Dhaka");
+    $c = strtotime("now");
+    $starttime = date("Y:m:d h:i:sa",$c);
+    $d = strtotime("+10 minutes");
+    $endtime = date("Y:m:d h:i:sa",$d);
 
       //String to Array
-  $textarr = explode("-",$username);
-  $name = $textarr[0];
-  $gr = $textarr[1];
-  $gor = $textarr[2];
-  $cause = $textarr[3];
+    $textarr = explode(" ",$username,3);
+    $name = $textarr[0];
+    $gr = $textarr[1];
+    $cause = $textarr[2];
 
       //Database connection
-  $host = "localhost";
-  $dbuser = "root";
-  $pass = "";
-  $db = "card";
+    $host = "localhost";
+    $dbuser = "root";
+    $pass = "";
+    $db = "card";
 
-  $conn = mysqli_connect($host,$dbuser,$pass,$db);
+    $conn = mysqli_connect($host,$dbuser,$pass,$db);
 
-  $yn = "SELECT yellow FROM get_card WHERE user='$name'";
-  $ynre = mysqli_query($conn,$yn);
-  $yrow = mysqli_fetch_assoc($ynre);
+    $rn = "SELECT red FROM get_card WHERE user='$name'";
+    $rnre = mysqli_query($conn,$rn);
+    $rrow = mysqli_fetch_assoc($rnre);
 
-  $num = $yrow['yellow']+1;
+    $num = $rrow['red']+1;
 
-  $update = "UPDATE get_card SET yellow = '$num' WHERE user='$name'";
-  if(mysqli_query($conn,$update))
+
+    $redget = "UPDATE get_card SET red = '$num' WHERE user='$name'";
+    if(mysqli_query($conn,$redget))
     {
-      if($num >= 2)
+      $upyellow = "UPDATE get_card SET yellow = '0' WHERE user='$name'";
+      if(mysqli_query($conn,$upyellow))
         {
-          red_card();
+          $upend = "UPDATE get_card SET endtime='0000-00-00 00:00:00' WHERE user='$name'";
+          if(mysqli_query($conn,$upend))
+          {
+            echo "This account is get a red card";
+          }
+          else
+          {
+            echo "Error: ".mysqli_error($upend);
+          }
         }
       else
         {
-          echo $name." get a yellow card";
+          echo "Error: ".$upyellow;
         }
     }
-  else
-    {
-      echo "Error: ".$mysqli_error($conn);
-    }
-
-  mysqli_close($conn);
-}
-
-// Red Card Function
-
-function red_card()
-{
-    //Get user Input
-  $username = ($_POST['user']);
-
-    //Include time file
-  include 'time.php';
-
-    //String to Array
-  $textarr = explode("-",$username);
-  $name = $textarr[0];
-  $gr = $textarr[1];
-  $gor = $textarr[2];
-  $cause = $textarr[3];
-
-    //Database connection
-  $host = "localhost";
-  $dbuser = "root";
-  $pass = "";
-  $db = "card";
-
-  $conn = mysqli_connect($host,$dbuser,$pass,$db);
-
-  $rn = "SELECT red FROM get_card WHERE user='$name'";
-  $rnre = mysqli_query($conn,$rn);
-  $rrow = mysqli_fetch_assoc($rnre);
-
-  $num = $rrow['red']+1;
-
-
-  $redget = "UPDATE get_card SET red = '$num' WHERE user='$name'";
-  if(mysqli_query($conn,$redget))
-  {
-    $upyellow = "UPDATE get_card SET yellow = '0' Where user='$name'";
-    if(mysqli_query($conn,$upyellow))
-      {
-        echo "This account is get a red card";
-      }
     else
       {
-        echo "Error: ".$upyellow;
+        echo "Error: ".$redget;
       }
+
+    mysqli_close($conn);
+
   }
-  else
-    {
-      echo "Error: ".$redget;
-    }
 
-  mysqli_close($conn);
+  if(isset($_POST['submit']))
+  {
+    cmd();
+  }
 
-}
-
-if(isset($_POST['submit']))
-{
-  call();
-}
-
-?>
+  ?>
 
 
-<form action="" method="post">
-  <p>Hint: Username-Get/Remove-Yellow/Red-Cause</p>
-  <input type="text" placeholder="Input your text here" name="user">
-  <button name="submit">Card</button>
-</form>
+  <form action="" method="post">
+    <p>Want to know about users? type: show users</p></br>
+    <input type="text" placeholder="Input your text here" name="user">
+    <p>Hint: Username Get/Remove Cause</p>
+    <button name="submit">Card</button>
+  </form>
